@@ -14,6 +14,20 @@ import api_client
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 
+# ==========  Flask routes ==========
+@app.route('/')
+def health_check():
+    return "🤖 Bot activo", 200
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return '', 200
+    return 'Invalid content type', 403
+
 # ========== Configuración del Bot ==========
 load_dotenv()
 BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
@@ -25,7 +39,7 @@ bot = telebot.TeleBot(str(BOT_TOKEN), parse_mode="HTML")
 PRODUCTS_PER_PAGE = 8
 PLACEHOLDER_IMAGE_PATH = 'placeholder.jpg'
 
-# ========== Funciones de Lógica del Catálogor==========
+# ========== Funciones de Lógica del Catálogo ==========
 
 def format_product_details(product):
     """Formatea los detalles de un producto y prepara la imagen ya decodificada."""
@@ -251,16 +265,3 @@ if __name__ == '__main__':
         bot.remove_webhook()
         bot.infinity_polling()
 
-# Flask routes
-@app.route('/')
-def health_check():
-    return "🤖 Bot activo", 200
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return '', 200
-    return 'Invalid content type', 403
